@@ -13,9 +13,9 @@ namespace TracerDemo.Helpers
 {
   public class UserHelper
   {
-    private MongoContext db { get; set; }
+    private SqliteContext db { get; set; }
     private HasherHelper Hasher { get; set; }
-    public UserHelper(MongoContext context, HasherHelper hasher)
+    public UserHelper(SqliteContext context, HasherHelper hasher)
     {
       db = context;
       this.Hasher = hasher;
@@ -28,7 +28,7 @@ namespace TracerDemo.Helpers
     /// <returns></returns>
     public User GetUserById(string id)
     {
-      User user = db.Users.Find(u => u.Id == id).FirstOrDefault();
+      User user = db.Users.Where(u => u.Id == id).FirstOrDefault();
       if (user != null)
         return user;
       else
@@ -42,7 +42,7 @@ namespace TracerDemo.Helpers
     /// <returns></returns>
     public User GetUserByEmail(string email)
     {
-      User user = db.Users.Find(u => u.Email == email).FirstOrDefault();
+      User user = db.Users.Where(u => u.Email == email).FirstOrDefault();
       if (user != null)
         return user;
       else
@@ -61,7 +61,7 @@ namespace TracerDemo.Helpers
       else if (!IsValidPassword(user.Password)) //User password must meet complexity requirements
         return false;
 
-      db.Users.InsertOne(user);
+      db.Users.Add(user);
 
       return true;
     }
@@ -90,7 +90,7 @@ namespace TracerDemo.Helpers
     {
       if (username != null)
         username = username.ToLower();
-      User user = db.Users.Find(u => u.Email.ToLower() == username).FirstOrDefault();
+      User user = db.Users.Where(u => u.Email.ToLower() == username).FirstOrDefault();
 
       if (facebookToken != null)
       {
@@ -110,14 +110,12 @@ namespace TracerDemo.Helpers
       else if (PasswordMatch(user, password) == false && facebookToken == null)
       {
         user.LockoutCount++;
-        var updateLockoutCount = Builders<User>.Update.Set(u => u.LockoutCount, user.LockoutCount);
-        db.Users.UpdateOne(u => u.Id == user.Id, updateLockoutCount);
+        db.Users.Update(user);
 
         if (user.LockoutCount >= 10)
         {
           user.LockoutDateTime = DateTime.Now.ToUniversalTime();
-          var updateLockoutDate = Builders<User>.Update.Set(u => u.LockoutDateTime, user.LockoutDateTime);
-          db.Users.UpdateOne(u => u.Id == user.Id, updateLockoutDate);
+          db.Users.Update(user);
 
           return UserValidationResponse.LockedOut;
         }
@@ -129,8 +127,7 @@ namespace TracerDemo.Helpers
         if (user.LockoutCount >= 10 && user.LockoutDateTime <= DateTime.Now.Subtract(new TimeSpan(0, 30, 0)).ToUniversalTime())
         {
           user.LockoutCount = 0;
-          var updateLockoutCount = Builders<User>.Update.Set(u => u.LockoutCount, user.LockoutCount).Set(u => u.LockoutDateTime, null);
-          db.Users.UpdateOne(u => u.Id == user.Id, updateLockoutCount);
+          db.Users.Update(user);
           userResult = user;
           return UserValidationResponse.Validated;
         }
@@ -144,8 +141,7 @@ namespace TracerDemo.Helpers
           if(user.LockoutCount >= 0)
           {
             user.LockoutCount = 0;
-            var updateLockoutCount = Builders<User>.Update.Set(u => u.LockoutCount, user.LockoutCount).Set(u => u.LockoutDateTime, null);
-            db.Users.UpdateOne(u => u.Id == user.Id, updateLockoutCount);
+            db.Users.Update(user);
           }
           userResult = user;
           return UserValidationResponse.Validated;
@@ -177,20 +173,18 @@ namespace TracerDemo.Helpers
         User user = GetUserByEmail(result.email);
         if (user != null)
         {
-          var update = Builders<User>.Update
-              .Set(u => u.FacebookId, result.id)
-              .Set(u => u.ActivationToken, null)
-              .Set(u => u.ActivationTokenExpiration, null)
-              .Set(u => u.EmailValidated, true);
-
-          db.Users.UpdateOne(u => u.Id == user.Id, update);
+            user.FacebookId = result.id;
+            user.ActivationToken = null;
+            user.ActivationTokenExpiration = null;
+            user.EmailValidated = true;
+            db.Users.Update(user);
         }
         else if (user == null)
         {
           //If no facebook user registered, create a new one
           if (result.id != null)//Do this to ensure that a response was found from the facebook api
 
-            user = db.Users.Find(u => u.FacebookId == result.id).FirstOrDefault();
+            user = db.Users.Where(u => u.FacebookId == result.id).FirstOrDefault();
           if (user == null)
           {
             //Facebook profile must have an email address associated with it.
@@ -215,28 +209,31 @@ namespace TracerDemo.Helpers
                 FacebookId = result.id,
                 EmailValidated = true
               };
-              user.Roles.Add("Trial");
-              db.Users.InsertOne(user);
+              Rol r = new Rol();
+              r.value = "Trial";
+              user.Roles.Add(r);
+              db.Users.Add(user);
             }
 
 
             if (existingUser != null)
-              db.Users.ReplaceOne(u => u.Id == existingUser.Id, user);
+            {
+               return default(User);
+            }
           }
         }
 
-        user = db.Users.Find(u => u.FacebookId == result.id).FirstOrDefault();
+        user = db.Users.Where(u => u.FacebookId == result.id).FirstOrDefault();
         if (user == null)
           return default(User);
 
         if (user.EmailValidated == false)
         {
-          var update = Builders<User>.Update
-              .Set(u => u.ActivationToken, null)
-              .Set(u => u.ActivationTokenExpiration, null)
-              .Set(u => u.EmailValidated, true);
-
-          db.Users.UpdateOne(u => u.Id == user.Id, update);
+            user.FacebookId = result.id;
+            user.ActivationToken = null;
+            user.ActivationTokenExpiration = null;
+            user.EmailValidated = true;
+            db.Users.Update(user);
         }
 
         return user;

@@ -1,7 +1,6 @@
-﻿using System;
+﻿
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using TracerDemo.Data;
 using Microsoft.AspNetCore.Authorization;
@@ -15,11 +14,11 @@ namespace TracerDemo.Controllers
 {
     public class TodoController : Controller
     {
-        private MongoContext db { get; set; }
+        private SqliteContext db { get; set; }
         private UserHelper UserHelper { get; set; }
-        public TodoController(MongoContext mongoContext, UserHelper userHelper)
+        public TodoController(SqliteContext sqliteContext, UserHelper userHelper)
         {
-            db = mongoContext;
+            db = sqliteContext;
             UserHelper = userHelper;
         }
 
@@ -35,7 +34,7 @@ namespace TracerDemo.Controllers
             if (id != user?.Id)
                 return BadRequest("Invalid Permissions");
 
-            List<Todo> list = db.Todos.Find(t => t.Owner == user.Id).ToList();
+            List<Todo> list = db.Todos.Where(t => t.Owner == user.Id).ToList();
 
             return Ok(list);
         }
@@ -63,7 +62,7 @@ namespace TracerDemo.Controllers
                     Task = model.Task
                 };
 
-                db.Todos.InsertOne(item);
+                db.Todos.Add(item);
                 return Ok(item);
             }
             else
@@ -83,13 +82,13 @@ namespace TracerDemo.Controllers
                 if (userId != user?.Id)
                     return BadRequest("Invalid Permissions");
 
-                Todo item = db.Todos.Find(t => t.Owner == userId && t.Id == itemId).FirstOrDefault();
+                Todo item = db.Todos.Where(t => t.Owner == userId && t.Id == itemId).FirstOrDefault();
 
                 if (item == null)
                     return NotFound();
 
-                var update = Builders<Todo>.Update.Set(t => t.Completed, completed);
-                db.Todos.UpdateOne(t => t.Id == itemId, update);
+                item.Completed = true;
+                db.Todos.Update(item);
 
                 return Ok();
             }
@@ -110,8 +109,11 @@ namespace TracerDemo.Controllers
                 if (userId != user?.Id)
                     return BadRequest("Invalid Permissions");
 
-                db.Todos.DeleteOne(t => t.Id == itemId && t.Owner == userId);
+                Todo item = db.Todos.Where(t => t.Id == itemId && t.Owner == userId).FirstOrDefault();
+                if (item == null)
+                    return NotFound();
 
+                db.Todos.Update(item);
                 return Ok();
             }
             else

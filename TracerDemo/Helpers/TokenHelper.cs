@@ -66,9 +66,9 @@ namespace TracerDemo.Helpers
                 //new Claim(JwtRegisteredClaimNames.Iat, ToUnixEpochDate(now).ToString(), ClaimValueTypes.Integer64)
             };
 
-			foreach (string role in user.Roles)
+			foreach (Rol role in user.Roles)
 			{
-				claims.Add(new Claim(ClaimTypes.Role, role));
+				claims.Add(new Claim(ClaimTypes.Role, role.value));
 			}
 
 			var jwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityToken(

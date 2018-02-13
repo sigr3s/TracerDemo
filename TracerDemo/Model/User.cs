@@ -25,7 +25,7 @@ namespace TracerDemo.Model
 
         public bool EmailValidated { get; set; } = false;
 
-        public List<string> Roles { get; set; } = new List<string>();
+        public List<Rol> Roles { get; set; } = new List<Rol>();
         public DateTime LastSignin { get; set; } = DateTime.Now;
         public DateTime Created { get; set; } = DateTime.Now;
         public DateTime Updated { get; set; } = DateTime.Now;

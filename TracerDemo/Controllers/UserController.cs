@@ -23,15 +23,15 @@ namespace TracerDemo.Controllers
 {
 	public class UserController : Controller
 	{
-		private MongoContext db { get; set; }
+		private SqliteContext db { get; set; }
 		private UserHelper UserHelper { get; set; }
 		private ValidationHelper ValidationHelper { get; set; }
 		private HasherHelper HasherHelper { get; set; }
 		private TokenHelper TokenHelper { get; set; }
 		private ApplicationSettings ApplicationSettings { get; set; }
-		public UserController(MongoContext mongoContext, UserHelper userHelper, ValidationHelper validationHelper, HasherHelper hasherHelper, TokenHelper tokenHelper, ApplicationSettings applicationSettings)
+		public UserController(SqliteContext sqliteContext, UserHelper userHelper, ValidationHelper validationHelper, HasherHelper hasherHelper, TokenHelper tokenHelper, ApplicationSettings applicationSettings)
 		{
-			db = mongoContext;
+			db = sqliteContext;
 			UserHelper = userHelper;
 			ValidationHelper = validationHelper;
 			HasherHelper = hasherHelper;
@@ -76,7 +76,10 @@ namespace TracerDemo.Controllers
 
 			UserSlim response = UserHelper.UserToUserSlim(user);
 			var lastSignIn = Builders<User>.Update.Set(u => u.LastSignin, DateTime.Now);
-			db.Users.UpdateOne(u => u.Id == user.Id, lastSignIn);
+
+			User updatedUser = db.Users.Where(u => u.Id == user.Id).FirstOrDefault();
+            updatedUser.LastSignin = DateTime.Now;
+            db.Update(updatedUser);
 
 			TokenHelper.BuildResponseCookie(Request.HttpContext, encodedJwt);
 
@@ -206,12 +209,10 @@ namespace TracerDemo.Controllers
 				string newPasswordHash = HasherHelper.GetHash(model.NewPassword + newSalt);
 
 
-				//If these parameters grow, us the AddToSet method to build 1 update operation, instead of 2 as seen here.
-				var updatePasswordAndSalt = Builders<User>.Update
-					.Set(u => u.Salt, newSalt)
-					.Set(u => u.Password, newPasswordHash);
+                user.Salt = newSalt;
+                user.Password = newPasswordHash;
 
-				db.Users.UpdateOne(u => u.Id == user.Id, updatePasswordAndSalt);
+				db.Users.Update(user);
 
 				return Ok();
 			}
@@ -244,11 +245,9 @@ namespace TracerDemo.Controllers
 				if (existing != null && user.Email != model.Email)
 					return BadRequest("Email address is used by another account");
 
-				var update = Builders<User>.Update
-					.Set(u => u.Email, model.Email)
-					.Set(u => u.Name, model.Name);
-
-				db.Users.UpdateOne(u => u.Id == id, update);
+                user.Email = model.Email;
+                user.Name = model.Name;
+				db.Users.Update(user);
 
 				return Ok();
 			}
@@ -328,7 +327,10 @@ namespace TracerDemo.Controllers
 					.Set(u => u.Salt, newSalt)
 					.Set(u => u.Password, newPasswordHash);
 
-				db.Users.UpdateOne(u => u.Id == user.Id, updatePasswordAndSalt);
+                user.Salt = newSalt;
+                user.Password = newPasswordHash;
+
+				db.Users.Update(user);
 
 				return Ok();
 			}
@@ -351,10 +353,10 @@ namespace TracerDemo.Controllers
 					return BadRequest("Invalid Permissions");
 
 				//Delete any Todo items owned by the user.
-				db.Todos.DeleteMany(t => t.Owner == user.Id);
+				//db.Todos.Remove(t => t.Owner == user.Id);
 
 				//Delete the user profile.
-				db.Users.DeleteOne(u => u.Id == user.Id);
+				db.Users.Remove(user);
 
 				Response.Cookies.Delete("access_token");
 				return Ok();

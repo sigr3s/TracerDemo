@@ -17,6 +17,7 @@ using TracerDemo.Data;
 using TracerDemo.Helpers;
 using TracerDemo.Model;
 using Newtonsoft.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 
 namespace TracerDemo
 {
@@ -82,7 +83,7 @@ namespace TracerDemo
 
 
 
-            services.AddTransient<MongoContext>();
+            services.AddTransient<SqliteContext>();
             services.AddTransient<HasherHelper>();
             services.AddTransient<ValidationHelper>();
             services.AddTransient<TokenHelper>();
@@ -104,6 +105,12 @@ namespace TracerDemo
 
             app.UseCors("AllowAll");
             app.UseMvcWithDefaultRoute();
+
+            using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
+            {
+                var context = serviceScope.ServiceProvider.GetRequiredService<SqliteContext>();
+                context.Database.Migrate();
+            }
         }
 
     }
