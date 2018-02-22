@@ -1,21 +1,16 @@
-<h3>My Todo List</h3>
+<h3>My Team List</h3>
 
-<form (ngSubmit)="createTodo()" #createForm="ngForm" class="input-group input-group-lg">
-    <input type="text" class="form-control" placeholder="Create New Todo Item" [(ngModel)]="model" name="newTask" />
-    <div class="btn btn-primary icon-camera input-group-addon" (click)="createTodo()">
+<form (ngSubmit)="createTeam()" #createForm="ngForm" class="input-group input-group-lg">
+    <input type="text" class="form-control" placeholder="Create New Team" [(ngModel)]="model" name="newTeam" />
+    <div class="btn btn-primary icon-camera input-group-addon" (click)="createTeam()">
         <span class="glyphicon glyphicon-plus"></span>
     </div>
 </form>
 
 <table class="table">
     <tbody>
-        <tr *ngFor="let item of tasks">
-            <td width="50">
-                <div class="btn {{item.completed == true ? 'btn-success' : 'btn-info'}}" (click)="completeTodo(item)">
-                    <span class="{{item.completed == true ? 'glyphicon glyphicon-ok-sign' : 'glyphicon glyphicon-stop'}}"></span>
-                </div>
-            </td>
-            <td class="padding-top-15"><span class="{{item.completed == true ? 'strike' : 'unstrike'}}">{{item.task}}</span></td>
+        <tr *ngFor="let item of teams">
+            <td class="padding-top-15"><span class="{{item.completed == true ? 'strike' : 'unstrike'}}">{{item.name}}</span></td>
             <td width="50">
                 <div class="btn btn-danger icon-camera" (click)="deleteTodo(item)">
                     <span class="glyphicon glyphicon-remove-sign"></span>

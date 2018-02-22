@@ -88,6 +88,7 @@ namespace TracerDemo
             services.AddTransient<ValidationHelper>();
             services.AddTransient<TokenHelper>();
             services.AddTransient<UserHelper>();
+            services.AddTransient<SummonerHelper>();
 
             services.AddCors(options =>
             {

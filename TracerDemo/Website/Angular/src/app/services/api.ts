@@ -7,7 +7,7 @@ export class Api {
 
     }
     options = new RequestOptions({withCredentials: true});
-    apiRoot = document.domain === 'localhost' ? 'http://localhost:58622/api' : 'https://netmongo.bckbtn.com/api'
+    apiRoot = document.domain === 'localhost' ? 'http://localhost:5000/api' : 'https://netmongo.bckbtn.com/api'
 
     public registerUser(email: string, password: string, confirmPassword: string) {
         let user = { email, password, confirmPassword };
@@ -57,5 +57,16 @@ export class Api {
     public deleteTodoById(userId: string, todoId: string) {
         return this._client.delete(this.apiRoot + '/v1/users/' + userId + '/todo/' + todoId, this.options);
     }
+
+    public createTeam(teamName: string){
+      let content = { teamName };
+      return this._client.post(this.apiRoot + '/v1/team',content,  this.options);
+    }
+
+    public getTeams(){
+      return this._client.get(this.apiRoot + '/v1/teams',  this.options);
+    }
+
+
 
 }

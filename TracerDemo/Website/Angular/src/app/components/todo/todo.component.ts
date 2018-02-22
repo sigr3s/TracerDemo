@@ -14,23 +14,23 @@ export class TodoComponent {
     constructor(public _api: Api, public _appService: AppService, public _modal: Modal)
     {
         this.appService = _appService;
-        this.tasks = new Array<any>();
+        this.teams = new Array<any>();
 
         //do any operations which are dependent upon a valid user session.
         this.appService.UserLoaded.subscribe(data => {
             if (data == true)
-                this.getTodos();
+                this.getTeams();
         });
 
     }
     model: string;
-    tasks: Array<any>;
+    teams: Array<any>;
     appService: AppService;
 
-    createTodo() {
-        this._api.createTodoByUser(this.appService.User.id, this.model).subscribe(data => {
+    createTeam() {
+        this._api.createTeam(this.model).subscribe(data => {
             this.model = '';
-            this.tasks.push(data.json());
+            this.teams.push(data.json());
         });
     }
 
@@ -51,15 +51,15 @@ export class TodoComponent {
             .open().result.then(result =>
             {
                 this._api.deleteTodoById(this.appService.User.id, item.id).subscribe(data => {
-                    this.tasks = this.tasks.filter(i => i.id != item.id);
+                    this.teams = this.teams.filter(i => i.id != item.id);
                 });
             });
 
     }
 
-    getTodos() {
-        this._api.getTodosByUserId(this.appService.User.id).subscribe(data => {
-            this.tasks = data.json();
+    getTeams() {
+        this._api.getTeams().subscribe(data => {
+            this.teams = data.json();
         });
     }
 

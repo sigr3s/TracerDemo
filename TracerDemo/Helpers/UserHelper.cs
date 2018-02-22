@@ -62,6 +62,7 @@ namespace TracerDemo.Helpers
         return false;
 
       db.Users.Add(user);
+      db.SaveChanges();
 
       return true;
     }
@@ -111,11 +112,13 @@ namespace TracerDemo.Helpers
       {
         user.LockoutCount++;
         db.Users.Update(user);
+          db.SaveChanges();
 
         if (user.LockoutCount >= 10)
         {
           user.LockoutDateTime = DateTime.Now.ToUniversalTime();
           db.Users.Update(user);
+          db.SaveChanges();
 
           return UserValidationResponse.LockedOut;
         }
@@ -128,6 +131,7 @@ namespace TracerDemo.Helpers
         {
           user.LockoutCount = 0;
           db.Users.Update(user);
+          db.SaveChanges();
           userResult = user;
           return UserValidationResponse.Validated;
         }
@@ -142,6 +146,7 @@ namespace TracerDemo.Helpers
           {
             user.LockoutCount = 0;
             db.Users.Update(user);
+            db.SaveChanges();
           }
           userResult = user;
           return UserValidationResponse.Validated;
@@ -178,6 +183,7 @@ namespace TracerDemo.Helpers
             user.ActivationTokenExpiration = null;
             user.EmailValidated = true;
             db.Users.Update(user);
+            db.SaveChanges();
         }
         else if (user == null)
         {
@@ -234,6 +240,7 @@ namespace TracerDemo.Helpers
             user.ActivationTokenExpiration = null;
             user.EmailValidated = true;
             db.Users.Update(user);
+            db.SaveChanges();
         }
 
         return user;

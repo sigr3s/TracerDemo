@@ -84,11 +84,19 @@ namespace TracerDemo.Model
         public string name { get; set; }
     }
 
+    public class TeamItemViewModel{
+        public string TeamName;
+        public List<TracerPlayerRed> players;
+    }
 
+    public class PlayerList{
+        public List<TracerPlayerRed> players;
+    }
 
-
-
-
+    public class TracerPlayerRed{
+        public string id;
+        public string summonerName;
+    }
 
 
     public class IdResponse
