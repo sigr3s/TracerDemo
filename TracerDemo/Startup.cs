@@ -18,6 +18,8 @@ using TracerDemo.Helpers;
 using TracerDemo.Model;
 using Newtonsoft.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
+using RiotNet;
+using RiotNet.Models;
 
 namespace TracerDemo
 {
@@ -26,6 +28,12 @@ namespace TracerDemo
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            
+            RiotClient.DefaultPlatformId = PlatformId.EUW1;
+            RiotClient.DefaultSettings = () => new RiotClientSettings
+            {
+                ApiKey = "RGAPI-b4dba8e0-0225-4575-9f36-8181ff0141a7"
+            };
         }
 
         public IConfiguration Configuration { get; }
@@ -79,6 +87,7 @@ namespace TracerDemo
             .AddJsonOptions(options =>
             {
                 options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
             });
 
 

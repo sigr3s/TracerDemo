@@ -14,9 +14,28 @@ namespace TracerDemo.Data
         public DbSet<TracerPlayer> TracerPlayers {get; set;}
         public DbSet<Todo> Todos { get; set; }
 
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlite("Data Source=trace.db");
+            
         }
+        
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<TeamTracerPlayer>()
+                .HasKey(pc => new { pc.TeamId, pc.TracerPlayerId });
+
+            modelBuilder.Entity<TeamTracerPlayer>()
+                .HasOne(pc => pc.Team)
+                .WithMany(p => p.TeamsRelation)
+                .HasForeignKey(pc => pc.TeamId);
+
+            modelBuilder.Entity<TeamTracerPlayer>()
+                .HasOne(pc => pc.TracerPlayer)
+                .WithMany(c => c.TeamsRelation)
+                .HasForeignKey(pc => pc.TracerPlayerId);
+        }
+
     }
 }

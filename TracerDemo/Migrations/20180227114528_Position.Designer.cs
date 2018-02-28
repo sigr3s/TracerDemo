@@ -7,12 +7,13 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Storage.Internal;
 using System;
 using TracerDemo.Data;
+using TracerDemo.Model;
 
 namespace TracerDemo.Migrations
 {
     [DbContext(typeof(SqliteContext))]
-    [Migration("20180220114721_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20180227114528_Position")]
+    partial class Position
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -168,6 +169,21 @@ namespace TracerDemo.Migrations
                     b.ToTable("Teams");
                 });
 
+            modelBuilder.Entity("TracerDemo.Model.TeamTracerPlayer", b =>
+                {
+                    b.Property<string>("TeamId");
+
+                    b.Property<string>("TracerPlayerId");
+
+                    b.Property<int>("Position");
+
+                    b.HasKey("TeamId", "TracerPlayerId");
+
+                    b.HasIndex("TracerPlayerId");
+
+                    b.ToTable("TeamTracerPlayer");
+                });
+
             modelBuilder.Entity("TracerDemo.Model.Todo", b =>
                 {
                     b.Property<string>("Id")
@@ -189,20 +205,16 @@ namespace TracerDemo.Migrations
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("TeamId");
+                    b.Property<string>("StatsId");
 
-                    b.Property<string>("statsId");
-
-                    b.Property<long?>("summonerId");
+                    b.Property<long?>("SummonerId");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TeamId");
-
-                    b.HasIndex("statsId")
+                    b.HasIndex("StatsId")
                         .IsUnique();
 
-                    b.HasIndex("summonerId");
+                    b.HasIndex("SummonerId");
 
                     b.ToTable("TracerPlayers");
                 });
@@ -280,19 +292,28 @@ namespace TracerDemo.Migrations
                         .HasForeignKey("UserId");
                 });
 
+            modelBuilder.Entity("TracerDemo.Model.TeamTracerPlayer", b =>
+                {
+                    b.HasOne("TracerDemo.Model.Team", "Team")
+                        .WithMany("TeamsRelation")
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("TracerDemo.Model.TracerPlayer", "TracerPlayer")
+                        .WithMany("TeamsRelation")
+                        .HasForeignKey("TracerPlayerId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
             modelBuilder.Entity("TracerDemo.Model.TracerPlayer", b =>
                 {
-                    b.HasOne("TracerDemo.Model.Team")
-                        .WithMany("Players")
-                        .HasForeignKey("TeamId");
-
-                    b.HasOne("TracerDemo.Model.PlayerStats", "stats")
+                    b.HasOne("TracerDemo.Model.PlayerStats", "Stats")
                         .WithOne("player")
-                        .HasForeignKey("TracerDemo.Model.TracerPlayer", "statsId");
+                        .HasForeignKey("TracerDemo.Model.TracerPlayer", "StatsId");
 
-                    b.HasOne("RiotNet.Models.Summoner", "summoner")
+                    b.HasOne("RiotNet.Models.Summoner", "Summoner")
                         .WithMany()
-                        .HasForeignKey("summonerId");
+                        .HasForeignKey("SummonerId");
                 });
 #pragma warning restore 612, 618
         }

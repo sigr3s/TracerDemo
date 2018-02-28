@@ -10,7 +10,7 @@ namespace TracerDemo.Model
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public string Name { get; set; }
-        public List<TracerPlayer> Players{ get; set; }
+        public ICollection<TeamTracerPlayer> TeamsRelation {get; set;}
         public DateTime LastUpdate { get; set; }
     }
 }

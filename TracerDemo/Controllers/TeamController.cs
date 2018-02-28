@@ -1,8 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using TracerDemo.Data;
+using TracerDemo.Helpers;
 using TracerDemo.Model;
 
 namespace TracerDemo.Controllers
@@ -10,10 +13,13 @@ namespace TracerDemo.Controllers
     public class TeamController : Controller {
         private SqliteContext db { get; set; }
 
+        private SummonerHelper summonerHelper {get; set;}
 
-        public TeamController(SqliteContext sqliteContext)
+
+        public TeamController(SqliteContext sqliteContext, SummonerHelper summonerHelper)
 		{
 			db = sqliteContext;
+            this.summonerHelper = summonerHelper;
 		}
 
 
@@ -24,9 +30,16 @@ namespace TracerDemo.Controllers
         {
             if (ModelState.IsValid)
             {
-                Team t = db.Teams.Where(team => team.Name.Equals(model.TeamName)).FirstOrDefault();
+                Team t = db.Teams.Where(tm => tm.Name.Equals(model.TeamName)).FirstOrDefault();
                 if(t != null) return BadRequest("Team already exsists");
-                List<TracerPlayer> players = new List<TracerPlayer>();
+
+                Team team = new Team()
+                {
+                    Name = model.TeamName
+                };
+
+                team.TeamsRelation = new List<TeamTracerPlayer>();
+
                 if(model.players != null){
                     for(int i = 0; i < model.players.Count; i++){
                         TracerPlayer player = null;
@@ -40,55 +53,140 @@ namespace TracerDemo.Controllers
                         else if(player ==null){
                             return BadRequest("Player not found");
                         }
-                        players.Add(player);
+                        team.TeamsRelation.Add(new TeamTracerPlayer {
+                            Team = team,
+                            TracerPlayer = player
+                        });
                     }
                 }
 
-                Team item = new Team()
-                {
-                    Name = model.TeamName,
-                    Players = players
-                };
 
-                db.Teams.Add(item);
+                db.Teams.Add(team);
                 db.SaveChanges();
-                return Ok(item);
+                return Ok(team);
             }
             else
                 return BadRequest();
         }
 
-        [HttpPost]
+        [HttpGet]
         [Authorize]
         [Route("api/v1/team/{name}/addPlayers")]
-        public IActionResult AddPlayers(string name, [FromBody] PlayerList playersToAdd)
+        public async System.Threading.Tasks.Task<IActionResult> AddPlayersAsync(string name, [FromBody] PlayerList playersToAdd)
         {
+            if (ModelState.IsValid && playersToAdd.players != null)
+            {
+                Team  t = db.Teams.Where(te => te.Name == name).FirstOrDefault();
+                if(t == null) return BadRequest();
 
-            return Ok("todo");
+                if(t.TeamsRelation == null) t.TeamsRelation = new List<TeamTracerPlayer>();
+
+                TracerPlayer tracerPlayer;
+                for(int i = 0; i < playersToAdd.players.Count; i++){
+                    if(!string.IsNullOrEmpty(playersToAdd.players[i].id)){
+                        tracerPlayer = db.TracerPlayers.Find(playersToAdd.players[i].id);
+                        if(tracerPlayer == null) return BadRequest();
+                        t.TeamsRelation.Add(new TeamTracerPlayer {
+                            Team = t,
+                            TracerPlayer = tracerPlayer
+                        });
+                    }
+                    else if(!string.IsNullOrEmpty((playersToAdd.players[i].summonerName))){
+                         tracerPlayer = await summonerHelper.FromSummonerName(playersToAdd.players[i].summonerName);
+                        if(tracerPlayer == null) return BadRequest();
+                        t.TeamsRelation.Add(new TeamTracerPlayer {
+                            Team = t,
+                            TracerPlayer = tracerPlayer
+                        });
+                    }
+                    else{
+                        return BadRequest();
+                    }
+                }
+
+                db.Teams.Update(t);
+                db.SaveChanges();
+                return Ok(t);
+            }
+            else{
+                return BadRequest();
+            }
         }
+
+        [HttpPost]
+        [Authorize]
+        [Route("api/v1/team/{name}/addPlayerBySummoner/{summonerName}")]
+        public async System.Threading.Tasks.Task<IActionResult> AddPlayerBySummonerAsync(string name, string summonerName)
+        {
+            if (ModelState.IsValid)
+            {
+                Team  t = db.Teams.Where(te => te.Name == name).FirstOrDefault();
+                if(t == null) return BadRequest();
+                
+                TracerPlayer tracerPlayer = await summonerHelper.FromSummonerName(summonerName);
+                if(tracerPlayer == null) return BadRequest();
+                
+                if(t.TeamsRelation == null) t.TeamsRelation = new List<TeamTracerPlayer>();
+                t.TeamsRelation.Add(new TeamTracerPlayer {
+                    TeamId = t.Id,
+                    TracerPlayerId = tracerPlayer.Id
+                });
+
+                db.Teams.Update(t);
+                db.SaveChanges();
+                return Ok(t);
+            }
+            else{
+                return BadRequest();
+            }
+        }
+
 
         [HttpPost]
         [Authorize]
         [Route("api/v1/team/{name}/removePlayers")]
         public IActionResult RemovePlayers(string name, [FromBody] PlayerList playerToRemove)
         {
+            if (ModelState.IsValid && playerToRemove.players != null)
+            {
+                Team  t = db.Teams.Where(te => te.Name == name).FirstOrDefault();
+                if(t == null) return BadRequest();
 
-            return Ok("todo");
+                TracerPlayer tracerPlayer;
+                for(int i = 0; i < playerToRemove.players.Count; i++){
+                    if(!string.IsNullOrEmpty(playerToRemove.players[i].id)){
+                        tracerPlayer = db.TracerPlayers.Find(playerToRemove.players[i].id);
+                        if(tracerPlayer == null) return BadRequest();
+
+                        TeamTracerPlayer ttp = t.TeamsRelation.Where(tr => tr.TeamId == t.Id && tr.TracerPlayerId == tracerPlayer.Id).FirstOrDefault();
+
+                        if(ttp == null) return BadRequest();
+                        else{
+                            t.TeamsRelation.Remove(ttp);
+                        }
+                    }
+                }
+
+                db.Teams.Update(t);
+                db.SaveChanges();
+                return Ok(t);
+            }
+            else{
+                return BadRequest();
+            }
         }
 
 
-        [HttpGet]        
-        [Authorize]
+        [HttpGet]
         [Route("api/v1/teams")]
-        public IActionResult GetTeams(string id, string teamName)
+        public IActionResult GetTeams()
         {
-            List<Team> teams = db.Teams.Where(t => !string.IsNullOrEmpty(t.Name)).ToList();
+            List<Team> teams = db.Teams.Include(t => t.TeamsRelation).
+                                        ThenInclude(t => t.TracerPlayer).
+                                        ThenInclude(t => t.Summoner).
+                                        Where(t => !string.IsNullOrEmpty(t.Name)).ToList();
             return Ok(teams);
         }
-
-
-
-
     }
 
 }

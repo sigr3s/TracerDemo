@@ -7,14 +7,14 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Storage.Internal;
 using System;
 using TracerDemo.Data;
-using TracerDemo.Model;
 
 namespace TracerDemo.Migrations
 {
     [DbContext(typeof(SqliteContext))]
-    partial class SqliteContextModelSnapshot : ModelSnapshot
+    [Migration("20180222124903_ChangeTeams")]
+    partial class ChangeTeams
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -173,8 +173,6 @@ namespace TracerDemo.Migrations
                     b.Property<string>("TeamId");
 
                     b.Property<string>("TracerPlayerId");
-
-                    b.Property<int>("Position");
 
                     b.HasKey("TeamId", "TracerPlayerId");
 

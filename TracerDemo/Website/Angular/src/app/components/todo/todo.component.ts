@@ -26,6 +26,8 @@ export class TodoComponent {
     model: string;
     teams: Array<any>;
     appService: AppService;
+    teamName : string;
+    summonerName : string;
 
     createTeam() {
         this._api.createTeam(this.model).subscribe(data => {
@@ -34,27 +36,10 @@ export class TodoComponent {
         });
     }
 
-    completeTodo(item: any) {
-        item.completed = item.completed ? false : true;
-        this._api.completeTodoById(this.appService.User.id, item.id, item.completed).subscribe(data => { });
-    }
-
-    deleteTodo(item: any) {
-        let result = this._modal.confirm()
-            .size('sm')
-            .isBlocking(true)
-            .showClose(false)
-            .title('Confirm')
-            .body('Are you certain you want to delete this item?')
-            .okBtn("Yes! Do it.")
-            .cancelBtn("No")
-            .open().result.then(result =>
-            {
-                this._api.deleteTodoById(this.appService.User.id, item.id).subscribe(data => {
-                    this.teams = this.teams.filter(i => i.id != item.id);
-                });
-            });
-
+    addSummoner(){
+      this._api.AddSummoner(this.teamName, this.summonerName).subscribe(data => {
+         this.getTeams();
+      })
     }
 
     getTeams() {

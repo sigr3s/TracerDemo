@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace TracerDemo.Migrations
 {
-    public partial class InitialCreate : Migration
+    public partial class ChangeTeams : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -161,28 +161,21 @@ namespace TracerDemo.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(nullable: false),
-                    TeamId = table.Column<string>(nullable: true),
-                    statsId = table.Column<string>(nullable: true),
-                    summonerId = table.Column<long>(nullable: true)
+                    StatsId = table.Column<string>(nullable: true),
+                    SummonerId = table.Column<long>(nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_TracerPlayers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TracerPlayers_Teams_TeamId",
-                        column: x => x.TeamId,
-                        principalTable: "Teams",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_TracerPlayers_PlayerStats_statsId",
-                        column: x => x.statsId,
+                        name: "FK_TracerPlayers_PlayerStats_StatsId",
+                        column: x => x.StatsId,
                         principalTable: "PlayerStats",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_TracerPlayers_Summoner_summonerId",
-                        column: x => x.summonerId,
+                        name: "FK_TracerPlayers_Summoner_SummonerId",
+                        column: x => x.SummonerId,
                         principalTable: "Summoner",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
@@ -227,6 +220,30 @@ namespace TracerDemo.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "TeamTracerPlayer",
+                columns: table => new
+                {
+                    TeamId = table.Column<string>(nullable: false),
+                    TracerPlayerId = table.Column<string>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TeamTracerPlayer", x => new { x.TeamId, x.TracerPlayerId });
+                    table.ForeignKey(
+                        name: "FK_TeamTracerPlayer_Teams_TeamId",
+                        column: x => x.TeamId,
+                        principalTable: "Teams",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_TeamTracerPlayer_TracerPlayers_TracerPlayerId",
+                        column: x => x.TracerPlayerId,
+                        principalTable: "TracerPlayers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_ChampionStats_PlayerStatsId",
                 table: "ChampionStats",
@@ -258,20 +275,20 @@ namespace TracerDemo.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TracerPlayers_TeamId",
-                table: "TracerPlayers",
-                column: "TeamId");
+                name: "IX_TeamTracerPlayer_TracerPlayerId",
+                table: "TeamTracerPlayer",
+                column: "TracerPlayerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TracerPlayers_statsId",
+                name: "IX_TracerPlayers_StatsId",
                 table: "TracerPlayers",
-                column: "statsId",
+                column: "StatsId",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_TracerPlayers_summonerId",
+                name: "IX_TracerPlayers_SummonerId",
                 table: "TracerPlayers",
-                column: "summonerId");
+                column: "SummonerId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -283,19 +300,22 @@ namespace TracerDemo.Migrations
                 name: "Rol");
 
             migrationBuilder.DropTable(
+                name: "TeamTracerPlayer");
+
+            migrationBuilder.DropTable(
                 name: "Todos");
 
             migrationBuilder.DropTable(
                 name: "Champion");
 
             migrationBuilder.DropTable(
-                name: "TracerPlayers");
-
-            migrationBuilder.DropTable(
                 name: "Users");
 
             migrationBuilder.DropTable(
                 name: "Teams");
+
+            migrationBuilder.DropTable(
+                name: "TracerPlayers");
 
             migrationBuilder.DropTable(
                 name: "PlayerStats");
