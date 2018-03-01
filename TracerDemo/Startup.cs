@@ -60,13 +60,13 @@ namespace TracerDemo
             })
             .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
             {
-                options.ExpireTimeSpan = new TimeSpan(1000, 0, 0, 0);
+                options.ExpireTimeSpan = new TimeSpan(0, 24, 0, 0);
                 options.Cookie = new CookieBuilder()
                 {
                     Name = "access_token",
                     HttpOnly = false,
                     SameSite = SameSiteMode.None,
-                    Domain = "tracer-lol.herokuapp.com"
+                    SecurePolicy = CookieSecurePolicy.SameAsRequest
                 };
                 options.Events.OnRedirectToLogin = (context) =>
                 {
