@@ -64,7 +64,7 @@ namespace TracerDemo
                 options.Cookie = new CookieBuilder()
                 {
                     Name = "access_token",
-                    HttpOnly = true,
+                    HttpOnly = false,
                     SameSite = SameSiteMode.None
                 };
                 options.Events.OnRedirectToLogin = (context) =>
