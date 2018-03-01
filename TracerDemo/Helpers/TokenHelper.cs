@@ -88,7 +88,8 @@ namespace TracerDemo.Helpers
 			{
 				Expires = new DateTimeOffset(DateTime.Now.AddDays(1000)),
 				HttpOnly = false,
-				SameSite = SameSiteMode.None
+				SameSite = SameSiteMode.None,
+				Domain = "tracer-lol-user"
 			};
 			context.Response.Cookies.Append("access_token", encodedJwt, options);
 		}
