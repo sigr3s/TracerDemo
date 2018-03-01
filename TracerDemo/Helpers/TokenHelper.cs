@@ -87,7 +87,7 @@ namespace TracerDemo.Helpers
 			CookieOptions options = new CookieOptions()
 			{
 				Expires = new DateTimeOffset(DateTime.Now.AddDays(1000)),
-				HttpOnly = true,
+				HttpOnly = false,
 				SameSite = SameSiteMode.None
 			};
 			context.Response.Cookies.Append("access_token", encodedJwt, options);
