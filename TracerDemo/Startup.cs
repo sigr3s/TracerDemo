@@ -65,7 +65,8 @@ namespace TracerDemo
                 {
                     Name = "access_token",
                     HttpOnly = false,
-                    SameSite = SameSiteMode.None
+                    SameSite = SameSiteMode.None,
+                    Domain = Configuration["DomainName"]
                 };
                 options.Events.OnRedirectToLogin = (context) =>
                 {
