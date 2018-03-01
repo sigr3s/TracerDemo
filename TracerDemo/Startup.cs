@@ -65,7 +65,8 @@ namespace TracerDemo
                 {
                     Name = "access_token",
                     HttpOnly = false,
-                    SameSite = SameSiteMode.None
+                    SameSite = SameSiteMode.None,
+                    Domain = "tracer-lol.herokuapp.com"
                 };
                 options.Events.OnRedirectToLogin = (context) =>
                 {
