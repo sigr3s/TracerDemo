@@ -12,13 +12,14 @@ using TracerDemo.Model;
 namespace TracerDemo.Migrations
 {
     [DbContext(typeof(SqliteContext))]
-    [Migration("20180227114528_Position")]
-    partial class Position
+    [Migration("20180301230400_initial")]
+    partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
                 .HasAnnotation("ProductVersion", "2.0.1-rtm-125");
 
             modelBuilder.Entity("RiotNet.Models.Champion", b =>

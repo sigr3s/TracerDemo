@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace TracerDemo.Migrations
 {
-    public partial class ChangeTeams : Migration
+    public partial class initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -225,7 +225,8 @@ namespace TracerDemo.Migrations
                 columns: table => new
                 {
                     TeamId = table.Column<string>(nullable: false),
-                    TracerPlayerId = table.Column<string>(nullable: false)
+                    TracerPlayerId = table.Column<string>(nullable: false),
+                    Position = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {

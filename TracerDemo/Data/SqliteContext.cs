@@ -17,7 +17,9 @@ namespace TracerDemo.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite("Data Source=trace.db");
+            string connString = "User ID=mbirljvqycbews;Password=ad6396cb46a7882d6ee2a1423a2c34a50aa50075208c39d1a8b9196a628ab1cf;Host=ec2-54-247-95-125.eu-west-1.compute.amazonaws.com;Port=5432;Database=d9i9f6396rilun;Pooling=true;Use SSL Stream=True;SSL Mode=Require;TrustServerCertificate=True;";
+
+            optionsBuilder.UseNpgsql(connectionString: connString);
             
         }
         
