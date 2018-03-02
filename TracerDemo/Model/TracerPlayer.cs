@@ -12,5 +12,7 @@ namespace TracerDemo.Model
         public Summoner Summoner { get; set; }
         public PlayerStats Stats {get; set;}
         public ICollection<TeamTracerPlayer> TeamsRelation {get; set;}
+
+        public DateTime LastUpdate;
     }
 }

@@ -10,11 +10,12 @@ namespace TracerDemo.Model
         public string Id { get; set; } = Guid.NewGuid().ToString();
 
         public int Games { get; set; }
-
+        public int Wins {get; set;}
         public int Kills { get; set; }
         public int Asists { get; set; }
         public int Daths { get; set; }
         public int Minions { get; set; }
+        public float Minutes {get; set;}
         public float MinutesXMatch { get; set; }
         public float WinRate { get; set; }
         public float MinionsMinute { get; set; }
@@ -24,6 +25,9 @@ namespace TracerDemo.Model
         public float FirstBlood { get; set; }
         public float CreepsAtTen { get; set; }
         public float CreepsDifAtTen { get; set; }
+        public int Wards {get; set;}
+        public int WardsKilled {get; set;}
         public float WardXmin { get; set; }
+        public float WardKillXmin { get; set; }
     }
 }
