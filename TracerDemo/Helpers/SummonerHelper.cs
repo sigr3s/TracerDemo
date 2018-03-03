@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using RiotNet;
 using RiotNet.Models;
@@ -40,7 +41,8 @@ namespace TracerDemo.Helpers
       }
 
       //check riot api
-      await UpdateStatsAsync(player, summoner, forceReload);
+      
+      BackgroundJob.Enqueue(() => UpdateStatsAsync(player, summoner, forceReload));
       return player;
     }
 
@@ -53,23 +55,43 @@ namespace TracerDemo.Helpers
       }
       //check the db
       TracerDemo.Model.Stats generalStats = CleanStats();
-      DateTime lastTwoMonths = DateTime.Today.AddMonths(-2);
-      MatchList matchList = await client.GetMatchListByAccountIdAsync(s.AccountId, rankedQueues: new List<QueueType> { QueueType.TEAM_BUILDER_RANKED_SOLO}, beginTime: DateTime.Now , endTime: lastTwoMonths);
+      DateTime lastTwoMonths = DateTime.Today.AddMonths(-2);            
+      var endTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second, DateTimeKind.Utc);
+      var beginTime = endTime.AddMonths(-2);
+      IEnumerable<QueueType> rankedQueues = new[] { QueueType.TEAM_BUILDER_RANKED_SOLO };
+
+      MatchList matchList = await client.GetMatchListByAccountIdAsync
+                            (s.AccountId, rankedQueues:rankedQueues );
+      if(matchList == null) return tp;
       List<MatchReference> matchReferneces = matchList.Matches;
-
+      if(matchReferneces == null) return tp;
       PlayerStats tracerStats = new PlayerStats();
-      Dictionary<string, ChampionStats> champDict = new Dictionary<string, ChampionStats>();
+      Dictionary<long, ChampionStats> champDict = new Dictionary<long, ChampionStats>();
 
+      int i = 0;
       foreach(MatchReference mr in matchReferneces){
+        if(mr.Timestamp > beginTime && mr.Timestamp < endTime){
+            i++;
+        }
+        else
+        {
+          Console.WriteLine("All rpocessed");
+          break;
+        }
+
+        if(i == 11){
+          Console.WriteLine("WHATT?");
+        }
+        Console.WriteLine("Processing match " + i +" of " + matchReferneces.Count);
         int champId = mr.Champion;
-        string champion = (await client.GetStaticChampionByIdAsync(mr.Champion)).Name;
         bool firstGame = false;
-        if(!champDict.ContainsKey(champion)){
+        if(!champDict.ContainsKey(champId)){
           ChampionStats cs = new ChampionStats {player = tp, champion = new Champion { Id = champId}, championStats = CleanStats()};
-          champDict.Add(champion, cs);
+          champDict.Add(champId, cs);
           firstGame = true;
         }
         Match m = await client.GetMatchAsync(mr.GameId);
+        if(m == null) continue;
         int blueDeaths = 0;
         int blueAsists = 0;
         int blueKills = 0;
@@ -98,23 +120,23 @@ namespace TracerDemo.Helpers
             if(mp.ChampionId == champId){
               playerSide =mp.TeamId;
               MatchParticipantStats matchPlayerStats = mp.Stats;
-              champDict[champion].championStats.Games +=1;
+              champDict[champId].championStats.Games +=1;
               generalStats.Games += 1;
-              champDict[champion].championStats.Minutes += (float) m.GameDuration.TotalMinutes;
+              champDict[champId].championStats.Minutes += (float) m.GameDuration.TotalMinutes;
               generalStats.Minutes += (float) m.GameDuration.TotalMinutes;
 
               if(matchPlayerStats.Win){
-                champDict[champion].championStats.Wins +=1;
+                champDict[champId].championStats.Wins +=1;
                 generalStats.Wins +=1;
               }
-              champDict[champion].championStats.WinRate = ((champDict[champion].championStats.Games * 1f) / (champDict[champion].championStats.Wins *1f));
+              champDict[champId].championStats.WinRate = ((champDict[champId].championStats.Games * 1f) / (champDict[champId].championStats.Wins *1f));
               generalStats.WinRate = ((generalStats.Games * 1f) / (generalStats.Wins *1f));
 
               //Champion Wards
-              champDict[champion].championStats.Wards += mp.Stats.WardsPlaced;
-              champDict[champion].championStats.WardsKilled += mp.Stats.WardsKilled;
-              champDict[champion].championStats.WardXmin = champDict[champion].championStats.Wards / champDict[champion].championStats.Minutes;
-              champDict[champion].championStats.WardKillXmin = champDict[champion].championStats.WardsKilled / champDict[champion].championStats.Minutes;
+              champDict[champId].championStats.Wards += mp.Stats.WardsPlaced;
+              champDict[champId].championStats.WardsKilled += mp.Stats.WardsKilled;
+              champDict[champId].championStats.WardXmin = champDict[champId].championStats.Wards / champDict[champId].championStats.Minutes;
+              champDict[champId].championStats.WardKillXmin = champDict[champId].championStats.WardsKilled / champDict[champId].championStats.Minutes;
 
               //General Wards
               generalStats.Wards += mp.Stats.WardsPlaced;
@@ -128,18 +150,18 @@ namespace TracerDemo.Helpers
               generalStats.Minions += mp.Stats.TotalMinionsKilled;
               generalStats.MinionsMinute = generalStats.Minions / generalStats.Minutes;
 
-              champDict[champion].championStats.Kills += mp.Stats.Kills;
-              champDict[champion].championStats.Daths += mp.Stats.Deaths;
-              champDict[champion].championStats.Asists += mp.Stats.Assists;
-              champDict[champion].championStats.Minions += mp.Stats.TotalMinionsKilled;
-              champDict[champion].championStats.MinionsMinute = champDict[champion].championStats.Minions/ champDict[champion].championStats.Minutes;
+              champDict[champId].championStats.Kills += mp.Stats.Kills;
+              champDict[champId].championStats.Daths += mp.Stats.Deaths;
+              champDict[champId].championStats.Asists += mp.Stats.Assists;
+              champDict[champId].championStats.Minions += mp.Stats.TotalMinionsKilled;
+              champDict[champId].championStats.MinionsMinute = champDict[champId].championStats.Minions/ champDict[champId].championStats.Minutes;
 
               playerKills += mp.Stats.Kills;
               playerDeaths += mp.Stats.Deaths;
               playerAssists += mp.Stats.Assists;
 
               if(mp.Stats.FirstBloodKill || mp.Stats.FirstBloodAssist){
-                  champDict[champion].championStats.FirstBlood +=1;
+                  champDict[champId].championStats.FirstBlood +=1;
                   generalStats.FirstBlood += 1;
               }
 
@@ -152,9 +174,9 @@ namespace TracerDemo.Helpers
             generalStats.KillShare += (playerKills) /  Math.Max(1f ,blueKills);
             generalStats.DeathShare += (playerDeaths) /  Math.Max(1f ,blueDeaths);
 
-            champDict[champion].championStats.KillParticipation +=(playerKills + playerAssists) /  Math.Max(1f ,blueKills);
-            champDict[champion].championStats.KillParticipation += (playerKills) /  Math.Max(1f ,blueKills);
-            champDict[champion].championStats.KillParticipation += (playerDeaths) /  Math.Max(1f ,blueDeaths);
+            champDict[champId].championStats.KillParticipation +=(playerKills + playerAssists) /  Math.Max(1f ,blueKills);
+            champDict[champId].championStats.KillParticipation += (playerKills) /  Math.Max(1f ,blueKills);
+            champDict[champId].championStats.KillParticipation += (playerDeaths) /  Math.Max(1f ,blueDeaths);
           break;
 
           case TeamSide.Team2:
@@ -162,9 +184,9 @@ namespace TracerDemo.Helpers
             generalStats.KillShare += (playerKills) /  Math.Max(1f ,redKills);
             generalStats.DeathShare += (playerDeaths) /  Math.Max(1f ,redDeaths);
 
-            champDict[champion].championStats.KillParticipation +=(playerKills + playerAssists) /  Math.Max(1f ,redKills);
-            champDict[champion].championStats.KillParticipation += (playerKills) /  Math.Max(1f ,redKills);
-            champDict[champion].championStats.KillParticipation += (playerDeaths) /  Math.Max(1f ,redDeaths);
+            champDict[champId].championStats.KillParticipation +=(playerKills + playerAssists) /  Math.Max(1f ,redKills);
+            champDict[champId].championStats.KillParticipation += (playerKills) /  Math.Max(1f ,redKills);
+            champDict[champId].championStats.KillParticipation += (playerDeaths) /  Math.Max(1f ,redDeaths);
           break;
         }
 

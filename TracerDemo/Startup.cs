@@ -20,6 +20,8 @@ using Newtonsoft.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using RiotNet;
 using RiotNet.Models;
+using Hangfire;
+using Hangfire.Mongo;
 
 namespace TracerDemo
 {
@@ -43,6 +45,10 @@ namespace TracerDemo
             var settings = Configuration.Get<ApplicationSettings>();
             services.AddSingleton(settings);
 
+            services.AddHangfire( config => 
+            config.UseMongoStorage
+                ("mongodb+srv://HangFire:HangFire123@hangfire-gtxq3.mongodb.net/test", "HangFire")
+                );
             //When an access token is sent to the server, use these rules to validate the token.
             var tokenValidationParameters = new TokenValidationParameters
             {
@@ -116,6 +122,9 @@ namespace TracerDemo
 
             app.UseCors("AllowAll");
             app.UseMvcWithDefaultRoute();
+            
+            app.UseHangfireDashboard();
+            app.UseHangfireServer();
 
             using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
             {
