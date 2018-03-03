@@ -1,5 +1,3 @@
-
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,7 +40,7 @@ namespace TracerDemo.Helpers
 
       //check riot api
       
-      BackgroundJob.Enqueue(() => UpdateStatsAsync(player, summoner, forceReload));
+      // BackgroundJob.Enqueue(() => UpdateStatsAsync(player, summoner, forceReload));
       return player;
     }
 
