@@ -124,8 +124,8 @@ namespace TracerDemo
             app.UseCors("AllowAll");
             app.UseMvcWithDefaultRoute();
             
-            //app.UseHangfireDashboard();
-            //app.UseHangfireServer();
+            app.UseHangfireDashboard();
+            app.UseHangfireServer();
 
             using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
             {
