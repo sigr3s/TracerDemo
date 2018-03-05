@@ -95,7 +95,7 @@ namespace TracerDemo.Helpers
         int champId = mr.Champion;
         //bool firstGame = false;
         if(!champDict.ContainsKey(champId)){
-          ChampionStats cs = new ChampionStats {TracerPlayerId = tp.Id, champion = new Champion { Id = champId}, Stats = CleanStats()};
+          ChampionStats cs = new ChampionStats {TracerPlayerId = tp.Id, ChampionId = champId, Stats = CleanStats()};
           champDict.Add(champId, cs);
           //firstGame = true;
         }
@@ -207,7 +207,7 @@ namespace TracerDemo.Helpers
       tracerStats.championStats = championStats;
 
       tp.PlayerStatsId = tracerStats.Id;
-      
+
       foreach(ChampionStats cs in championStats){
         db.Add(cs);
       }
