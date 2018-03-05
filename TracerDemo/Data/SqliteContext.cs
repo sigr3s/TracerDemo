@@ -37,6 +37,22 @@ namespace TracerDemo.Data
                 .HasOne(pc => pc.TracerPlayer)
                 .WithMany(c => c.TeamsRelation)
                 .HasForeignKey(pc => pc.TracerPlayerId);
+            
+
+            modelBuilder.Entity<TracerPlayer>()
+                .HasOne(pc => pc.Summoner);
+            
+            modelBuilder.Entity<TracerPlayer>()
+                .HasOne(pc => pc.PlayerStats);
+            
+            modelBuilder.Entity<TracerPlayer>()
+                .HasOne(pc => pc.PlayerStats)
+                .WithOne(pc => pc.player)
+                .HasForeignKey<PlayerStats>(pc =>  pc.StatsId);
+            
+            modelBuilder.Entity<ChampionStats>()
+                .HasOne(pc => pc.player);
+            
         }
 
     }

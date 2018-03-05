@@ -9,7 +9,9 @@ namespace TracerDemo.Model
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public TracerPlayer player { get; set; }
+        public string TracerPlayerId {get; set;}
         public List<ChampionStats> championStats { get; set; }
         public Stats stats { get; set; }
+        public string StatsId {get; set;}
     }
 }

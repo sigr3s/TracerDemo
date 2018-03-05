@@ -64,23 +64,23 @@ namespace TracerDemo.Migrations
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<long>("ChampionId");
+
                     b.Property<string>("PlayerStatsId");
 
-                    b.Property<long?>("championId");
+                    b.Property<string>("StatsId");
 
-                    b.Property<string>("championStatsId");
-
-                    b.Property<string>("playerId");
+                    b.Property<string>("TracerPlayerId");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ChampionId");
+
                     b.HasIndex("PlayerStatsId");
 
-                    b.HasIndex("championId");
+                    b.HasIndex("StatsId");
 
-                    b.HasIndex("championStatsId");
-
-                    b.HasIndex("playerId");
+                    b.HasIndex("TracerPlayerId");
 
                     b.ToTable("ChampionStats");
                 });
@@ -90,9 +90,16 @@ namespace TracerDemo.Migrations
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<string>("StatsId");
+
+                    b.Property<string>("TracerPlayerId");
+
                     b.Property<string>("statsId");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("StatsId")
+                        .IsUnique();
 
                     b.HasIndex("statsId");
 
@@ -215,14 +222,11 @@ namespace TracerDemo.Migrations
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("StatsId");
+                    b.Property<string>("PlayerStatsId");
 
-                    b.Property<long?>("SummonerId");
+                    b.Property<long>("SummonerId");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("StatsId")
-                        .IsUnique();
 
                     b.HasIndex("SummonerId");
 
@@ -271,25 +275,30 @@ namespace TracerDemo.Migrations
 
             modelBuilder.Entity("TracerDemo.Model.ChampionStats", b =>
                 {
+                    b.HasOne("RiotNet.Models.Champion", "champion")
+                        .WithMany()
+                        .HasForeignKey("ChampionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("TracerDemo.Model.PlayerStats")
                         .WithMany("championStats")
                         .HasForeignKey("PlayerStatsId");
 
-                    b.HasOne("RiotNet.Models.Champion", "champion")
+                    b.HasOne("TracerDemo.Model.Stats", "Stats")
                         .WithMany()
-                        .HasForeignKey("championId");
-
-                    b.HasOne("TracerDemo.Model.Stats", "championStats")
-                        .WithMany()
-                        .HasForeignKey("championStatsId");
+                        .HasForeignKey("StatsId");
 
                     b.HasOne("TracerDemo.Model.TracerPlayer", "player")
                         .WithMany()
-                        .HasForeignKey("playerId");
+                        .HasForeignKey("TracerPlayerId");
                 });
 
             modelBuilder.Entity("TracerDemo.Model.PlayerStats", b =>
                 {
+                    b.HasOne("TracerDemo.Model.TracerPlayer", "player")
+                        .WithOne("PlayerStats")
+                        .HasForeignKey("TracerDemo.Model.PlayerStats", "StatsId");
+
                     b.HasOne("TracerDemo.Model.Stats", "stats")
                         .WithMany()
                         .HasForeignKey("statsId");
@@ -317,13 +326,10 @@ namespace TracerDemo.Migrations
 
             modelBuilder.Entity("TracerDemo.Model.TracerPlayer", b =>
                 {
-                    b.HasOne("TracerDemo.Model.PlayerStats", "Stats")
-                        .WithOne("player")
-                        .HasForeignKey("TracerDemo.Model.TracerPlayer", "StatsId");
-
                     b.HasOne("RiotNet.Models.Summoner", "Summoner")
                         .WithMany()
-                        .HasForeignKey("SummonerId");
+                        .HasForeignKey("SummonerId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618
         }

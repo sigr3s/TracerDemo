@@ -181,13 +181,13 @@ namespace TracerDemo.Controllers
         [Route("api/v1/teams")]
         public async System.Threading.Tasks.Task<IActionResult> GetTeamsAsync()
         {
-            //await summonerHelper.FromSummonerName("parpi", true);
+            await summonerHelper.FromSummonerName("parpi", true);
             List<Team> teams = db.Teams.Include(t => t.TeamsRelation).
                                         ThenInclude(t => t.TracerPlayer).
                                         ThenInclude(t => t.Summoner).
                                         Include(t => t.TeamsRelation).
                                         ThenInclude(t => t.TracerPlayer).
-                                        ThenInclude(t => t.Stats).
+                                        ThenInclude(t => t.PlayerStats).
                                         ThenInclude(t => t.championStats).
                                         Where(t => !string.IsNullOrEmpty(t.Name)).ToList();
             return Ok(teams);

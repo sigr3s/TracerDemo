@@ -47,7 +47,7 @@ namespace TracerDemo
 
             services.AddHangfire( config => 
             config.UseMongoStorage
-                ("mongodb+srv://HangFire:HangFire123@hangfire-gtxq3.mongodb.net/test", "HangFire")
+                ("mongodb://hangfire:hangfire@ds111608.mlab.com:11608/hangfire", "hangfire")
                 );
 
             //When an access token is sent to the server, use these rules to validate the token.
