@@ -187,6 +187,10 @@ namespace TracerDemo.Controllers
                                         Include(t => t.TeamsRelation).
                                         ThenInclude(t => t.TracerPlayer).
                                         ThenInclude(t => t.PlayerStats).
+                                        ThenInclude(t => t.stats).
+                                        Include(t => t.TeamsRelation).
+                                        ThenInclude(t => t.TracerPlayer).
+                                        ThenInclude(t => t.PlayerStats).
                                         ThenInclude(t => t.championStats).
                                         ThenInclude(x => x.Stats).
                                         Where(t => !string.IsNullOrEmpty(t.Name)).ToList();
