@@ -204,6 +204,31 @@ namespace TracerDemo.Controllers
             var res = await summonerHelper.FromSummonerName(summonerName);
             return Ok(res);
         }
+
+        [HttpGet]
+        [Route("api/v1/team/{teamName}")]
+        public async System.Threading.Tasks.Task<IActionResult> GetTeam(string teamName)
+        {
+            Team team = db.Teams.Include(t => t.TeamsRelation).
+                                        ThenInclude(t => t.TracerPlayer).
+                                        ThenInclude(t => t.Summoner).
+                                        Include(t => t.TeamsRelation).
+                                        ThenInclude(t => t.TracerPlayer).
+                                        ThenInclude(t => t.PlayerStats).
+                                        ThenInclude(t => t.stats).
+                                        Include(t => t.TeamsRelation).
+                                        ThenInclude(t => t.TracerPlayer).
+                                        ThenInclude(t => t.PlayerStats).
+                                        ThenInclude(t => t.championStats).
+                                        ThenInclude(x => x.Stats).
+                                        Where(t => t.Name.Equals(teamName)).FirstOrDefault();
+            if(team != null && team.TeamsRelation != null){
+                foreach(TeamTracerPlayer tr in team.TeamsRelation){
+                   await summonerHelper.FromSummonerName(tr.TracerPlayer.Summoner.Name);
+                }
+            }
+            return Ok(team);
+        }
     }
 
 }

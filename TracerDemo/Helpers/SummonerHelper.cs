@@ -82,7 +82,7 @@ namespace TracerDemo.Helpers
 
     public List<string> processingSummoners = new List<string>();
 
-
+    [AutomaticRetry(Attempts = 3)]
     public async Task<TracerPlayer> UpdateStatsAsync(long tpID){
       TracerPlayer tp = db.TracerPlayers.Include(t => t.Summoner )
                                 .Include(t => t.PlayerStats)
