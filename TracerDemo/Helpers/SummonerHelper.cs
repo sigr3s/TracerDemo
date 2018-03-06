@@ -20,14 +20,38 @@ namespace TracerDemo.Helpers
     {
       db = context;
       client = new RiotClient();
+      Champion c = db.Champion.FirstOrDefault();
+      if(c == null){
+          Task.Run(PopulateChampionsAsync);
+      }
     }
 
-    public async Task<TracerPlayer> FromSummonerName(string name, bool forceReload = false){
+    private async Task PopulateChampionsAsync(){
+        List<Champion> champions = (await client.GetChampionsAsync()).ToList();
+        foreach(Champion c in champions){
+          db.Add(c);
+        }
+        db.SaveChanges();
+    }
+
+    public struct SummonerResponse{
+       public  TracerPlayer tracerPlayer;
+       public RequestState requestState;
+    }
+
+    public enum RequestState{
+      Done,
+      Processing
+    }
+
+    public async Task<SummonerResponse> FromSummonerName(string name, bool forceReload = false){
       TracerPlayer player = null;
       //check the db
       Summoner summoner = await client.GetSummonerBySummonerNameAsync(name).ConfigureAwait(false);
        player = db.TracerPlayers.Include(tp => tp.Summoner )
                                 .Include(tp => tp.PlayerStats)
+                                .ThenInclude(tp => tp.championStats )
+                                .ThenInclude(x => x.Stats)
                                 .Where(tp => tp.Summoner.Id == (long) summoner.Id).FirstOrDefault();
 
       if(player == null){  
@@ -38,27 +62,43 @@ namespace TracerDemo.Helpers
         db.SaveChanges();
       }
 
-      player = db.TracerPlayers.Include(tp => tp.Summoner )
-                                .Include(tp => tp.PlayerStats)
-                                .Where(tp => tp.Summoner.Id == (long) summoner.Id).FirstOrDefault();
+      player = db.TracerPlayers.Where(tp => tp.Summoner.Id == (long) summoner.Id).FirstOrDefault();
 
       //check riot api
       
+      if(player.LastUpdate != null && !forceReload){
+        if((DateTime.Now - player.LastUpdate).TotalDays < 5){
+            return new SummonerResponse{ tracerPlayer = player , requestState = RequestState.Done };
+        }
+      }
+
       if(!processingSummoners.Contains(player.Summoner.Name)){
         processingSummoners.Add(summoner.Name);
-        BackgroundJob.Enqueue(() => UpdateStatsAsync(player, forceReload));
+        BackgroundJob.Enqueue(() => UpdateStatsAsync(summoner.Id));
       }
-      return player;
+      return new SummonerResponse{ tracerPlayer = player , requestState = RequestState.Processing };
+;
     }
 
     public List<string> processingSummoners = new List<string>();
 
 
-    public async Task<TracerPlayer> UpdateStatsAsync(TracerPlayer tp,  bool forceReload){
-      if(tp.LastUpdate != null && !forceReload){
-        if((DateTime.Now - tp.LastUpdate).TotalDays < 5){
-            return tp;
+    public async Task<TracerPlayer> UpdateStatsAsync(long tpID){
+      TracerPlayer tp = db.TracerPlayers.Include(t => t.Summoner )
+                                .Include(t => t.PlayerStats)
+                                .ThenInclude(t => t.championStats)
+                                .ThenInclude(x => x.Stats)
+                                .Where(t => t.Summoner.Id == (long) tpID).FirstOrDefault();
+
+
+      if(tp.PlayerStats != null){
+        //Delete db trash..
+        foreach(ChampionStats cs in tp.PlayerStats.championStats){
+            db.Remove(cs);
         }
+        db.Remove(tp.PlayerStats.stats);
+        db.Remove(tp.PlayerStats);
+        db.SaveChanges();
       }
       //check the db
       TracerDemo.Model.Stats generalStats = CleanStats();
@@ -88,9 +128,6 @@ namespace TracerDemo.Helpers
           break;
         }
 
-        if(i == 11){
-          Console.WriteLine("WHATT?");
-        }
         Console.WriteLine("Processing match " + i +" of " + matchReferneces.Count);
         int champId = mr.Champion;
         //bool firstGame = false;
@@ -203,17 +240,22 @@ namespace TracerDemo.Helpers
       
       List<ChampionStats> championStats = champDict.Values.ToList();
 
-      tracerStats.stats = generalStats;
-      tracerStats.championStats = championStats;
-
       tp.PlayerStatsId = tracerStats.Id;
+      tp.LastUpdate = DateTime.Now;
+      db.TracerPlayers.Update(tp);
+      db.SaveChanges();
 
       foreach(ChampionStats cs in championStats){
         db.Add(cs);
       }
-      db.Add(tracerStats);
 
-      db.TracerPlayers.Update(tp);
+      db.SaveChanges();
+      tracerStats.stats = generalStats;
+      tracerStats.championStats = championStats;
+      tracerStats.TracerPlayerId = tp.Id;
+      tracerStats.player = tp;
+      tracerStats.StatsId = generalStats.Id;
+      db.Add(tracerStats);
       db.SaveChanges();
 
       processingSummoners.Remove(tp.Summoner.Name);

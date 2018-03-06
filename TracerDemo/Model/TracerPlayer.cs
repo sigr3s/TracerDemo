@@ -9,9 +9,9 @@ namespace TracerDemo.Model
     public class TracerPlayer
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
-        public Summoner Summoner { get; set; }
+        public virtual Summoner Summoner { get; set; }
         public long SummonerId {get; set;}
-        public PlayerStats PlayerStats {get; set;}
+        public virtual PlayerStats PlayerStats {get; set;}
         public string PlayerStatsId {get; set;}
         public ICollection<TeamTracerPlayer> TeamsRelation {get; set;}
 

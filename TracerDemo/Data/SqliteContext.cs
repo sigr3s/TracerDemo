@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TracerDemo.Model;
+using RiotNet.Models;
+
 
 namespace TracerDemo.Data
 {
@@ -13,6 +15,7 @@ namespace TracerDemo.Data
         public DbSet<User> Users { get; set; }
         public DbSet<TracerPlayer> TracerPlayers {get; set;}
         public DbSet<Todo> Todos { get; set; }
+        public DbSet<Champion> Champion {get; set;}
 
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -48,7 +51,7 @@ namespace TracerDemo.Data
             modelBuilder.Entity<TracerPlayer>()
                 .HasOne(pc => pc.PlayerStats)
                 .WithOne(pc => pc.player)
-                .HasForeignKey<PlayerStats>(pc =>  pc.StatsId);
+                .HasForeignKey<PlayerStats>(pc =>  pc.StatsId); 
             
             modelBuilder.Entity<ChampionStats>()
                 .HasOne(pc => pc.player);

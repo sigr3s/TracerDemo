@@ -92,7 +92,7 @@ namespace TracerDemo.Controllers
                         });
                     }
                     else if(!string.IsNullOrEmpty((playersToAdd.players[i].summonerName))){
-                         tracerPlayer = await summonerHelper.FromSummonerName(playersToAdd.players[i].summonerName);
+                         tracerPlayer = (await summonerHelper.FromSummonerName(playersToAdd.players[i].summonerName)).tracerPlayer;
                         if(tracerPlayer == null) return BadRequest();
                         t.TeamsRelation.Add(new TeamTracerPlayer {
                             Team = t,
@@ -123,7 +123,7 @@ namespace TracerDemo.Controllers
                 Team  t = db.Teams.Where(te => te.Name == name).FirstOrDefault();
                 if(t == null) return BadRequest();
                 
-                TracerPlayer tracerPlayer = await summonerHelper.FromSummonerName(summonerName);
+                TracerPlayer tracerPlayer = (await summonerHelper.FromSummonerName(summonerName)).tracerPlayer;
                 if(tracerPlayer == null) return BadRequest();
                 
                 if(t.TeamsRelation == null) t.TeamsRelation = new List<TeamTracerPlayer>();
@@ -179,9 +179,8 @@ namespace TracerDemo.Controllers
 
         [HttpGet]
         [Route("api/v1/teams")]
-        public async System.Threading.Tasks.Task<IActionResult> GetTeamsAsync()
+        public IActionResult GetTeamsAsync()
         {
-            await summonerHelper.FromSummonerName("parpi", true);
             List<Team> teams = db.Teams.Include(t => t.TeamsRelation).
                                         ThenInclude(t => t.TracerPlayer).
                                         ThenInclude(t => t.Summoner).
@@ -189,8 +188,17 @@ namespace TracerDemo.Controllers
                                         ThenInclude(t => t.TracerPlayer).
                                         ThenInclude(t => t.PlayerStats).
                                         ThenInclude(t => t.championStats).
+                                        ThenInclude(x => x.Stats).
                                         Where(t => !string.IsNullOrEmpty(t.Name)).ToList();
             return Ok(teams);
+        }
+
+        [HttpGet]
+        [Route("api/v1/summoner/{summonerName}")]
+        public async System.Threading.Tasks.Task<IActionResult> GetSummoner(string summonerName)
+        {
+            var res = await summonerHelper.FromSummonerName(summonerName);
+            return Ok(res);
         }
     }
 
