@@ -91,7 +91,7 @@ namespace TracerDemo.Helpers
                                 .Where(t => t.Summoner.Id == (long) tpID).FirstOrDefault();
 
 
-      if(tp.PlayerStats != null){
+      if(tp.PlayerStats != null && tp.PlayerStats.championStats != null && tp.PlayerStats.championStats.Count > 0 ){
         //Delete db trash..
         foreach(ChampionStats cs in tp.PlayerStats.championStats){
             db.Remove(cs);
