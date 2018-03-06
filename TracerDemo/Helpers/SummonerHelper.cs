@@ -90,15 +90,22 @@ namespace TracerDemo.Helpers
                                 .ThenInclude(x => x.Stats)
                                 .Where(t => t.Summoner.Id == (long) tpID).FirstOrDefault();
 
-
+      bool doneSome = false;
       if(tp.PlayerStats != null && tp.PlayerStats.championStats != null && tp.PlayerStats.championStats.Count > 0 ){
         //Delete db trash..
         foreach(ChampionStats cs in tp.PlayerStats.championStats){
             db.Remove(cs);
+            doneSome = true;
         }
-        db.Remove(tp.PlayerStats.stats);
-        db.Remove(tp.PlayerStats);
-        db.SaveChanges();
+        if(tp.PlayerStats.stats != null) {
+          db.Remove(tp.PlayerStats.stats);
+            doneSome = true;
+        }
+        if(tp.PlayerStats != null){
+          db.Remove(tp.PlayerStats);
+            doneSome = true;
+        }
+        if(doneSome) db.SaveChanges();
       }
       //check the db
       TracerDemo.Model.Stats generalStats = CleanStats();
