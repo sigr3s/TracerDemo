@@ -177,6 +177,9 @@ namespace TracerDemo.Helpers
               generalStats.Games += 1;
               champDict[champId].Stats.Minutes += (float) m.GameDuration.TotalMinutes;
               generalStats.Minutes += (float) m.GameDuration.TotalMinutes;
+              
+              champDict[champId].Stats.MinutesXMatch += champDict[champId].Stats.Minutes / champDict[champId].Stats.Games;
+              generalStats.MinutesXMatch += generalStats.Minutes / generalStats.Games;
 
               if(matchPlayerStats.Win){
                 champDict[champId].Stats.Wins +=1;
@@ -213,6 +216,8 @@ namespace TracerDemo.Helpers
               playerDeaths += mp.Stats.Deaths;
               playerAssists += mp.Stats.Assists;
 
+
+
               if(mp.Stats.FirstBloodKill || mp.Stats.FirstBloodAssist){
                   champDict[champId].Stats.FirstBlood +=1;
                   generalStats.FirstBlood += 1;
@@ -228,8 +233,8 @@ namespace TracerDemo.Helpers
             generalStats.DeathShare += (playerDeaths) /  Math.Max(1f ,blueDeaths);
 
             champDict[champId].Stats.KillParticipation +=(playerKills + playerAssists) /  Math.Max(1f ,blueKills);
-            champDict[champId].Stats.KillParticipation += (playerKills) /  Math.Max(1f ,blueKills);
-            champDict[champId].Stats.KillParticipation += (playerDeaths) /  Math.Max(1f ,blueDeaths);
+            champDict[champId].Stats.KillShare += (playerKills) /  Math.Max(1f ,blueKills);
+            champDict[champId].Stats.DeathShare += (playerDeaths) /  Math.Max(1f ,blueDeaths);
           break;
 
           case TeamSide.Team2:
@@ -238,8 +243,8 @@ namespace TracerDemo.Helpers
             generalStats.DeathShare += (playerDeaths) /  Math.Max(1f ,redDeaths);
 
             champDict[champId].Stats.KillParticipation +=(playerKills + playerAssists) /  Math.Max(1f ,redKills);
-            champDict[champId].Stats.KillParticipation += (playerKills) /  Math.Max(1f ,redKills);
-            champDict[champId].Stats.KillParticipation += (playerDeaths) /  Math.Max(1f ,redDeaths);
+            champDict[champId].Stats.KillShare += (playerKills) /  Math.Max(1f ,redKills);
+            champDict[champId].Stats.DeathShare += (playerDeaths) /  Math.Max(1f ,redDeaths);
           break;
         }
 
