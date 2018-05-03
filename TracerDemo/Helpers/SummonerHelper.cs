@@ -15,7 +15,8 @@ namespace TracerDemo.Helpers
   {
     private SqliteContext db { get; set; }
     private IRiotClient client;
-    
+    private StaticChampionList scl;
+
     public SummonerHelper(SqliteContext context)
     {
       db = context;
@@ -54,7 +55,7 @@ namespace TracerDemo.Helpers
                                 .ThenInclude(x => x.Stats)
                                 .Where(tp => tp.Summoner.Id == (long) summoner.Id).FirstOrDefault();
 
-      if(player == null){  
+      if(player == null){
         player = new TracerPlayer{
           Summoner = summoner
         };
@@ -65,9 +66,8 @@ namespace TracerDemo.Helpers
       player = db.TracerPlayers.Where(tp => tp.Summoner.Id == (long) summoner.Id).FirstOrDefault();
 
       //check riot api
-      
-      if(player.LastUpdate != null && !forceReload){
-        if((DateTime.Now - player.LastUpdate).TotalDays < 5){
+      if(player.LastUpdate != 0 && !forceReload){
+        if((DateTime.Now - DateTime.FromFileTimeUtc(player.LastUpdate)).TotalDays < 5){
             return new SummonerResponse{ tracerPlayer = player , requestState = RequestState.Done };
         }
       }
@@ -84,6 +84,15 @@ namespace TracerDemo.Helpers
 
     [AutomaticRetry(Attempts = 3)]
     public async Task<TracerPlayer> UpdateStatsAsync(long tpID){
+      if(scl == null){
+        scl = (await client.GetStaticChampionsAsync());
+        scl.Keys = new Dictionary<string, string>();
+
+        foreach(var k in scl.Data.Keys){
+           scl.Keys.Add(scl.Data[k].Id.ToString(), k);
+        }
+      }
+
       TracerPlayer tp = db.TracerPlayers.Include(t => t.Summoner )
                                 .Include(t => t.PlayerStats)
                                 .ThenInclude(t => t.championStats)
@@ -109,7 +118,7 @@ namespace TracerDemo.Helpers
       }
       //check the db
       TracerDemo.Model.Stats generalStats = CleanStats();
-      DateTime lastTwoMonths = DateTime.Today.AddMonths(-2);            
+      DateTime lastTwoMonths = DateTime.Today.AddMonths(-2);
       var endTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second, DateTimeKind.Utc);
       var beginTime = endTime.AddMonths(-2);
       IEnumerable<QueueType> rankedQueues = new[] { QueueType.TEAM_BUILDER_RANKED_SOLO };
@@ -121,7 +130,7 @@ namespace TracerDemo.Helpers
       if(matchReferneces == null) return tp;
       PlayerStats tracerStats = new PlayerStats();
       tracerStats.TracerPlayerId = tp.Id;
-      
+
       Dictionary<long, ChampionStats> champDict = new Dictionary<long, ChampionStats>();
 
       int i = 0;
@@ -139,7 +148,7 @@ namespace TracerDemo.Helpers
         int champId = mr.Champion;
         //bool firstGame = false;
         if(!champDict.ContainsKey(champId)){
-          ChampionStats cs = new ChampionStats {TracerPlayerId = tp.Id, ChampionId = champId, Stats = CleanStats()};
+          ChampionStats cs = new ChampionStats {TracerPlayerId = tp.Id, ChampionId = champId,ChampionName = scl.Keys[champId.ToString()], Stats = CleanStats()};
           champDict.Add(champId, cs);
           //firstGame = true;
         }
@@ -177,7 +186,7 @@ namespace TracerDemo.Helpers
               generalStats.Games += 1;
               champDict[champId].Stats.Minutes += (float) m.GameDuration.TotalMinutes;
               generalStats.Minutes += (float) m.GameDuration.TotalMinutes;
-              
+
               champDict[champId].Stats.MinutesXMatch += champDict[champId].Stats.Minutes / champDict[champId].Stats.Games;
               generalStats.MinutesXMatch += generalStats.Minutes / generalStats.Games;
 
@@ -253,7 +262,7 @@ namespace TracerDemo.Helpers
       List<ChampionStats> championStats = champDict.Values.ToList();
 
       tp.PlayerStatsId = tracerStats.Id;
-      tp.LastUpdate = DateTime.Now;
+      tp.LastUpdate = endTime.ToFileTimeUtc();
       db.TracerPlayers.Update(tp);
       db.SaveChanges();
 

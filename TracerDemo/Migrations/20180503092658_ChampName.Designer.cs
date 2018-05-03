@@ -12,9 +12,10 @@ using TracerDemo.Model;
 namespace TracerDemo.Migrations
 {
     [DbContext(typeof(SqliteContext))]
-    partial class SqliteContextModelSnapshot : ModelSnapshot
+    [Migration("20180503092658_ChampName")]
+    partial class ChampName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -223,8 +224,6 @@ namespace TracerDemo.Migrations
                 {
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
-
-                    b.Property<long>("LastUpdate");
 
                     b.Property<string>("PlayerStatsId");
 

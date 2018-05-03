@@ -14,7 +14,6 @@ namespace TracerDemo.Model
         public virtual PlayerStats PlayerStats {get; set;}
         public string PlayerStatsId {get; set;}
         public ICollection<TeamTracerPlayer> TeamsRelation {get; set;}
-
-        public DateTime LastUpdate;
+        public long LastUpdate {get; set;}
     }
 }

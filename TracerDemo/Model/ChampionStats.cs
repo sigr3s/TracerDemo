@@ -13,6 +13,7 @@ namespace TracerDemo.Model
         public string TracerPlayerId {get; set;}
         public Champion champion { get; set; }
         public long ChampionId {get; set;}
+        public string ChampionName {get; set;}
         public Stats Stats { get; set; }
         public string StatsId {get; set;}
     }
