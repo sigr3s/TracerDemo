@@ -72,8 +72,10 @@ namespace TracerDemo.Helpers
         }
       }
 
-      if(!processingSummoners.Contains(player.Summoner.Name)){
-        processingSummoners.Add(summoner.Name);
+      if(!player.IsProcesing){
+        player.IsProcesing = true;
+        db.TracerPlayers.Update(player);
+        db.SaveChanges();
         BackgroundJob.Enqueue(() => UpdateStatsAsync(summoner.Id));
       }
       return new SummonerResponse{ tracerPlayer = player , requestState = RequestState.Processing };
@@ -262,6 +264,7 @@ namespace TracerDemo.Helpers
       List<ChampionStats> championStats = champDict.Values.ToList();
 
       tp.PlayerStatsId = tracerStats.Id;
+      tp.IsProcesing = false;
       tp.LastUpdate = endTime.ToFileTimeUtc();
       db.TracerPlayers.Update(tp);
       db.SaveChanges();

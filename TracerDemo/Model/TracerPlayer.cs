@@ -15,5 +15,6 @@ namespace TracerDemo.Model
         public string PlayerStatsId {get; set;}
         public ICollection<TeamTracerPlayer> TeamsRelation {get; set;}
         public long LastUpdate {get; set;}
+        public bool IsProcesing {get; set;}
     }
 }
